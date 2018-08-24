@@ -1,0 +1,10 @@
+doctype html
+
+html
+  head
+    meta(charset='UTF-8')
+    title Copy
+
+  body
+    #root
+    script(src=env == 'prod' ? '/options.bundle.js' : 'https://localhost:3000/options.bundle.js')
