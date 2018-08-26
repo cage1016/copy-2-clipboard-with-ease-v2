@@ -11,7 +11,7 @@ const tabIdClient = new TabIdentifierClient();
 
 const styles = theme => ({
     root: {
-        display: 'flex',
+        zIndex: '1000002',
     },
 });
 
@@ -33,21 +33,20 @@ class PositionedSnackbar extends React.Component {
     }
 
     render() {
-        const { snackbar } = this.props
+        const { classes, snackbar } = this.props
         const { tabId } = this.state
         return (
-            <div>
-                <Snackbar
-                    anchorOrigin={{ vertical: snackbar.vertical, horizontal: snackbar.horizontal }}
-                    open={snackbar.open && snackbar.tabId === tabId}
-                    ContentProps={{
-                        'aria-describedby': 'message-id',
-                    }}
-                    onClose={this.props.CloseSnackbar}
-                    autoHideDuration={snackbar.autoHideDuration}
-                    message={<span id="message-id">{snackbar.msg}</span>}
-                />
-            </div>
+            <Snackbar
+                className={classes.root}
+                anchorOrigin={{ vertical: snackbar.vertical, horizontal: snackbar.horizontal }}
+                open={snackbar.open && snackbar.targetTabId === tabId}
+                ContentProps={{
+                    'aria-describedby': 'message-id',
+                }}
+                onClose={this.props.CloseSnackbar}
+                autoHideDuration={snackbar.autoHideDuration}
+                message={<span id="message-id">{snackbar.msg}</span>}
+            />
         );
     }
 }

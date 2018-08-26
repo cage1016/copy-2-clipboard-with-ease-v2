@@ -23,7 +23,6 @@
     "permissions": [
         "background",
         "tabs",
-		"tabs",
 		"activeTab",
 		"contextMenus",
 		"storage",

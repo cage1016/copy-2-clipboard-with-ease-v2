@@ -8,6 +8,7 @@ import { SNACKBAR_OPEN } from './reducers/snackbar'
 import { Transform } from './transform'
 import { default as copy } from './copy'
 
+
 // We need outerReducer to replace full state as soon as it loaded
 const reducer = asyncInitialState.outerReducer(combineReducers({
     ...reducers,
@@ -18,13 +19,23 @@ const reducer = asyncInitialState.outerReducer(combineReducers({
 
 
 const loadStorage = (getCurrentState) => {
-    return new Promise(resolve => {
+    return new Promise(async (resolve) => {
+
+        const activetab = await chrome.tabs.queryAsync({
+            active: true,
+            currentWindow: true,
+            status: 'complete'
+        }).then(([tab]) => tab)
+
         chrome.storage.local.get('state', items => {
             resolve(items.state ? JSON.parse(items.state) : {
                 ...getCurrentState(),
                 default: {
                     patterns: DEFAULT_ACTIONS,
-                    snackbar: SNACKBAR_CONFIG
+                    snackbar: SNACKBAR_CONFIG,
+                    activetab: {
+                        tab: activetab,
+                    }
                 }
             })
         })
@@ -36,42 +47,68 @@ const aliases = {
     // this key is the name of the action to proxy, the value is the action
     // creator that gets executed when the proxied action is received in the
     // background
-    'user-clicked-alias': ({ pattern }) => async (dispatch) => {
-        // get current tab
-        const tab = await chrome.tabs.queryAsync({
-            active: true,
-            currentWindow: true
-        }).then(tabs => tabs[0])
-
-        // trnasform copy pattern
+    'user-clicked-alias': ({ payload }) => async (dispatch) => {
+        const { tab, pattern } = payload
         const [err, text] = await Transform(tab.title, tab.url, pattern)
         if (err) {
             dispatch({
                 type: SNACKBAR_OPEN,
-                msg: `"${err}"`, tabId: tab.id
+                msg: `"${err}"`,
+                targetTabId: tab.id
             })
-        }else{
+        } else {
             // copy text to clipboard
             copy(text)
 
             dispatch({
                 type: SNACKBAR_OPEN,
-                msg: `"${text}" copied`, tabId: tab.id
+                msg: `"${text}" copied`,
+                targetTabId: tab.id
             })
+        }
+    },
+    'get-current-tab': () => async (dispatch) => {
+        const tab = await chrome.tabs.queryAsync({
+            active: true,
+            currentWindow: true
+        }).then(tabs => tabs[0])
+
+        return {
+            type: `ACTION_GET_SESSION`,
+            tab
         }
     }
 }
 
+
 const store = createStore(
     reducer,
-    compose(applyMiddleware(asyncInitialState.middleware(loadStorage), alias(aliases), thunk))
+    compose(applyMiddleware(alias(aliases), thunk, asyncInitialState.middleware(loadStorage)))
 )
 
+
+const reduxPromiseResponder = (dispatchResult, send) => {
+    return Promise
+        .resolve(dispatchResult)
+        .then(res => {
+            // resolve(value && value.payload); is used by the promise in the content script store dispatch
+            return send({ error: null, value: { payload: res } });
+        })
+        .catch(error => send({ error, value: null }))
+};
+
+
 wrapStore(store, {
-    portName: 'copy'
+    portName: 'copy',
+    dispatchResponder: reduxPromiseResponder
 });
+
 
 store.dispatch({
     type: 'MANUAL_INIT',
 })
 
+
+module.exports = {
+    store: store
+}

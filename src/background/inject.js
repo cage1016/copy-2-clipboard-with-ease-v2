@@ -1,5 +1,3 @@
-import { INVALID_SCHEMA } from './config'
-
 function isInjected(tabId) {
     return chrome.tabs.executeScriptAsync(tabId, {
         code: `var injected = window.reactExampleInjected;
@@ -33,8 +31,7 @@ function loadScript(name, tabId, cb) {
 }
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    console.log(`tab.url = ${tab.url}`)
-    if (changeInfo.status !== 'loading' || tab.url.match(INVALID_SCHEMA.join('|'))) return;
+    if (changeInfo.status !== 'loading') return;
 
     const result = await isInjected(tabId);
     if (chrome.runtime.lastError || result[0]) return;

@@ -55,13 +55,13 @@ export const STATUS_COLOR = {
 /**
  * inalid schema for shorten url
  */
-export const INVALID_SCHEMA = ['^chrome://']
+export const INVALID_SCHEMA = ['^http://localhost', '^https://localhost']
 
 export const SNACKBAR_CONFIG = {
     open: false,
     msg: '',
     vertical: 'bottom',
     horizontal: 'left',
-    tabId: '',
-    autoHideDuration: 1000
+    autoHideDuration: 1000,
+    targetTabId: ''
 }

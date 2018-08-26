@@ -2,11 +2,14 @@ import { REGEX_TITLE, REGEX_URL, REGEX_SURL, PATTERN_SURL } from './config'
 
 
 async function Transform(title, url, pattern) {
+    if (pattern.startsWith('=HYPERLINK('))
+        title = title.replace(/\"/g, "\"\"")
+
     let text = pattern
     if (pattern.indexOf(PATTERN_SURL) >= 0) {
         const [err, surl] = await to(shortenUrl(url))
         return err ? [err] : [null, text.replace(REGEX_SURL, surl).replace(REGEX_TITLE, title)]
-    }else{
+    } else {
         return [null, text.replace(REGEX_URL, url).replace(REGEX_TITLE, title)]
     }
 }
@@ -26,11 +29,13 @@ async function shortenUrl(longUrl) {
     }
 }
 
+
 function to(promise) {
     return promise.then(data => {
         return [null, data];
     }).catch(err => [err]);
 }
+
 
 module.exports = {
     Transform: Transform,

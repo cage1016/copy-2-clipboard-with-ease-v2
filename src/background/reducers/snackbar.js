@@ -1,5 +1,3 @@
-import { debug } from "util";
-
 export const SNACKBAR_OPEN = 'snackbar/SNACKBAR_OPEN'
 export const SNACKBAR_CLOSE = 'snackbar/SNACKBAR_CLOSE'
 
@@ -12,14 +10,14 @@ export default function snackbar(state = initialState, action) {
                 ...state,
                 open: true,
                 msg: action.msg,
-                tabId: action.tabId
+                targetTabId: action.targetTabId
             }
         case SNACKBAR_CLOSE:
             return {
                 ...state,
                 open: false,
                 msg: '',
-                tabId: ''
+                targetTabId: ''
             }
         default:
             return state
@@ -33,4 +31,4 @@ const action = (type, payload = {}) => ({
 
 export const CloseSnackbar = () => action(SNACKBAR_CLOSE)
 
-export const OpenSnackbar = (msg) => action(SNACKBAR_OPEN, { msg, tabId: '' })
+export const OpenSnackbar = (msg, targetTabId) => action(SNACKBAR_OPEN, { msg, targetTabId })
