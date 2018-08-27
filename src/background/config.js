@@ -52,6 +52,8 @@ export const STATUS_COLOR = {
     }
 };
 
+export const AUTO_HIDE_DURATION = 1000
+
 /**
  * inalid schema for shorten url
  */
@@ -62,6 +64,6 @@ export const SNACKBAR_CONFIG = {
     msg: '',
     vertical: 'bottom',
     horizontal: 'left',
-    autoHideDuration: 1000,
+    autoHideDuration: AUTO_HIDE_DURATION,
     targetTabId: ''
 }

@@ -3,7 +3,7 @@ import thunk from 'redux-thunk';
 import * as reducers from './reducers';
 import * as asyncInitialState from 'redux-async-initial-state';
 import { alias, wrapStore } from 'react-chrome-redux';
-import { DEFAULT_ACTIONS, SNACKBAR_CONFIG } from './config'
+import { DEFAULT_ACTIONS, SNACKBAR_CONFIG, STATUS_COLOR, AUTO_HIDE_DURATION } from './config'
 import { SNACKBAR_OPEN } from './reducers/snackbar'
 import { Transform } from './transform'
 import { default as copy } from './copy'
@@ -42,6 +42,18 @@ const loadStorage = (getCurrentState) => {
     })
 }
 
+const timeout = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// update chrome browser badge text and background color
+const updateBadge = async (message, color, delay = -1) => {
+    chrome.browserAction.setBadgeText({ text: message })
+    chrome.browserAction.setBadgeBackgroundColor(color)
+    await timeout(delay)
+    chrome.browserAction.setBadgeText({ text: '' })
+}
+
 
 const aliases = {
     // this key is the name of the action to proxy, the value is the action
@@ -49,8 +61,12 @@ const aliases = {
     // background
     'user-clicked-alias': ({ payload }) => async (dispatch) => {
         const { tab, pattern } = payload
+
+        updateBadge('...', STATUS_COLOR.ok, AUTO_HIDE_DURATION)
+
         const [err, text] = await Transform(tab.title, tab.url, pattern)
         if (err) {
+            updateBadge('err', STATUS_COLOR.err, AUTO_HIDE_DURATION)
             dispatch({
                 type: SNACKBAR_OPEN,
                 msg: `"${err}"`,
@@ -60,6 +76,7 @@ const aliases = {
             // copy text to clipboard
             copy(text)
 
+            updateBadge('done', STATUS_COLOR.ok, AUTO_HIDE_DURATION)
             dispatch({
                 type: SNACKBAR_OPEN,
                 msg: `"${text}" copied`,
