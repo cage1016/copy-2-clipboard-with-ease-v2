@@ -67,3 +67,5 @@ export const SNACKBAR_CONFIG = {
     autoHideDuration: AUTO_HIDE_DURATION,
     targetTabId: ''
 }
+
+export const SHOULD_DISABLE_TABS_TITLE = ['Extensions', 'History', 'New Tab']

@@ -21,14 +21,13 @@ class SimpleMenu extends React.Component {
 
     render() {
         const { classes, patterns, tab } = this.props
-        let p = patterns,r
+        let p = patterns, r
         if (tab.url) {
-            if (tab.url.match(INVALID_SCHEMA.join('|'))) 
+            if (tab.url.match(INVALID_SCHEMA.join('|')))
                 p = p.filter(pattern => pattern.indexOf(PATTERN_SURL) === -1)
-                    
-            r = p.map(pattern => (<MenuItem key={pattern} onClick={() => this.onClick(pattern, tab)}>{pattern}</MenuItem>))            
-        }
 
+            r = p.map(pattern => (<MenuItem key={pattern} onClick={() => this.onClick(pattern, tab)}>{pattern}</MenuItem>))
+        }
         return (
             <div className={classes.root} >
                 <MenuList>
@@ -43,13 +42,10 @@ SimpleMenu.propTypes = {
     classes: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = (state) => {
-    debugger
-    return {
-        patterns: state.default.patterns,
-        tab: state.default.activetab.tab,
-    }
-}
+const mapStateToProps = (state) => ({
+    patterns: state.default.patterns,
+    tab: state.default.activetab.tab,
+})
 
 
 const mapDispatchToProps = dispatch => ({
