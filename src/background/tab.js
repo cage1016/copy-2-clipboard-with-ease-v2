@@ -34,64 +34,65 @@ const setMenu = async () => {
         patterns
     } } = store.getState()
 
-
-    if (SHOULD_DISABLE_TABS_TITLE.indexOf(tab.title) > -1) {
+    console.log('current tab → ', tab)
+    
+    if (!tab.url) {
         await chrome.browserAction.disable(tab.id)
         return
     }
 
-    console.log(tab.title)
+    if (tab && tab.url) {
 
-    let p = patterns
-    if (tab.url.match(INVALID_SCHEMA.join('|')))
-        p = p.filter(pattern => pattern.indexOf(PATTERN_SURL) === -1)
+        let p = patterns
+        if (tab.url.match(INVALID_SCHEMA.join('|')))
+            p = p.filter(item => item.pattern.indexOf(PATTERN_SURL) === -1)
 
-    p.forEach(pattern => {
-        chrome.contextMenus.create({
-            title: `(P) ${pattern}`,
-            contexts: ['page'],
-            onclick: (info, tab) => {
-                store.dispatch({
-                    type: 'user-clicked-alias',
-                    payload: {
-                        pattern,
-                        tab
-                    }
-                })
-            }
-        })
-    })
 
-    patterns.forEach(pattern => {
-        chrome.contextMenus.create({
-            title: `(L) ${pattern}`,
-            contexts: ['link'],
-            onclick: (info, tab) => {
-                store.dispatch({
-                    type: 'user-clicked-alias',
-                    payload: {
-                        pattern,
-                        tab: {
-                            title: info.selectionText,
-                            url: info.linkUrl,
-                            id: tab.id,
+        p.filter(item => item.isEnable).forEach(item => {
+            chrome.contextMenus.create({
+                title: `(P) ${item.pattern}`,
+                contexts: ['page'],
+                onclick: (info, tab) => {
+                    store.dispatch({
+                        type: 'user-clicked-alias',
+                        payload: {
+                            pattern: item.pattern,
+                            tab
                         }
-                    }
-                })
-            }
+                    })
+                }
+            })
         })
-    })
+
+        patterns.filter(item => item.isEnable).forEach(item => {
+            chrome.contextMenus.create({
+                title: `(L) ${item.pattern}`,
+                contexts: ['link'],
+                onclick: (info, tab) => {
+                    store.dispatch({
+                        type: 'user-clicked-alias',
+                        payload: {
+                            pattern,
+                            tab: {
+                                title: info.selectionText,
+                                url: info.linkUrl,
+                                id: tab.id,
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    }
 }
 
-const queryShouldDisableTabs = async (title) => {
-    return chrome.tabs.queryAsync({
-        title: title
-    }).then(([tab]) => tab ? tab.id : null)
+const queryShouldDisableTabs = async () => {
+    return chrome.tabs.queryAsync({}).then(tabs => tabs.filter(tab => !tab.url).map(tab => tab.id))
 }
 
 (async () => {
-    const ids = await Promise.all(SHOULD_DISABLE_TABS_TITLE.map(async (title) => await queryShouldDisableTabs(title)))
-    ids.filter(id => id).forEach((id) => {
+    const ids = await queryShouldDisableTabs()
+    ids.forEach((id) => {
         chrome.browserAction.disable(id)
     })
 })()

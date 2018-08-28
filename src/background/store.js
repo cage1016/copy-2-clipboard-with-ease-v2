@@ -3,10 +3,12 @@ import thunk from 'redux-thunk';
 import * as reducers from './reducers';
 import * as asyncInitialState from 'redux-async-initial-state';
 import { alias, wrapStore } from 'react-chrome-redux';
-import { DEFAULT_ACTIONS, SNACKBAR_CONFIG, STATUS_COLOR, AUTO_HIDE_DURATION } from './config'
+import { STATUS_COLOR, AUTO_HIDE_DURATION } from './config'
 import { SNACKBAR_OPEN } from './reducers/snackbar'
 import { Transform } from './transform'
 import { default as copy } from './copy'
+import { loadState, saveState } from './storage'
+import { throttle } from 'lodash'
 
 
 // We need outerReducer to replace full state as soon as it loaded
@@ -20,25 +22,8 @@ const reducer = asyncInitialState.outerReducer(combineReducers({
 
 const loadStorage = (getCurrentState) => {
     return new Promise(async (resolve) => {
-
-        const activetab = await chrome.tabs.queryAsync({
-            active: true,
-            currentWindow: true,
-            status: 'complete'
-        }).then(([tab]) => tab)
-
-        chrome.storage.local.get('state', items => {
-            resolve(items.state ? JSON.parse(items.state) : {
-                ...getCurrentState(),
-                default: {
-                    patterns: DEFAULT_ACTIONS,
-                    snackbar: SNACKBAR_CONFIG,
-                    activetab: {
-                        tab: activetab,
-                    }
-                }
-            })
-        })
+        const storage = await loadState(getCurrentState)
+        resolve(storage)
     })
 }
 
@@ -103,6 +88,15 @@ const store = createStore(
     compose(applyMiddleware(alias(aliases), thunk, asyncInitialState.middleware(loadStorage)))
 )
 
+// On any state change, save the state to localStorage.
+// Prevent the saveState function from being called too many times in case that
+// state updates vary fast.
+store.subscribe(throttle(() => {
+    const state = store.getState()
+    if (state.asyncInitialState.loaded) {
+        saveState(state)
+    }
+}, 1000)) // At most once this length of time.
 
 const reduxPromiseResponder = (dispatchResult, send) => {
     return Promise

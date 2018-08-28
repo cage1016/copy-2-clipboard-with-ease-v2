@@ -1,11 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from 'react'
+import App from './app'
+import { render } from 'react-dom'
 
-const title = 'My Minimal React Webpack Babel Sdddetup';
+import { Store } from 'react-chrome-redux';
+import { Provider } from 'react-redux';
 
-ReactDOM.render(
-  <div>{title}</div>,
-  document.getElementById('root')
-);
+const proxyStore = new Store({
+  portName: 'copy'
+});
 
-module.hot.accept();
+proxyStore.ready().then(() => {
+  render(
+    <Provider store={proxyStore}>
+      <App />
+    </Provider>
+    , document.getElementById('root'));
+});

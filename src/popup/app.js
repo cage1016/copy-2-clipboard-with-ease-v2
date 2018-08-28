@@ -24,9 +24,10 @@ class SimpleMenu extends React.Component {
         let p = patterns, r
         if (tab.url) {
             if (tab.url.match(INVALID_SCHEMA.join('|')))
-                p = p.filter(pattern => pattern.indexOf(PATTERN_SURL) === -1)
+                p = p.filter(item => item.pattern.indexOf(PATTERN_SURL) === -1)
 
-            r = p.map(pattern => (<MenuItem key={pattern} onClick={() => this.onClick(pattern, tab)}>{pattern}</MenuItem>))
+            p = p.filter(item => item.isEnable)
+            r = p.map(item => (<MenuItem key={item.pattern} onClick={() => this.onClick(item.pattern, tab)}>{item.pattern}</MenuItem>))
         }
         return (
             <div className={classes.root} >
