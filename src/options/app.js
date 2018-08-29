@@ -68,7 +68,9 @@ class Options extends React.Component {
         this.props.ToggleDefaultPattern(item)
     }
 
-    handleToggle = value => () => {
+    handleToggle = ({ pattern: value, type }) => {
+        if (type === 'default') return
+
         const { checked } = this.state;
         const currentIndex = checked.indexOf(value);
         const newChecked = [...checked];
@@ -157,7 +159,7 @@ class Options extends React.Component {
                         {xx.map((o) => (
                             <List key={o.type} component="nav" subheader={<ListSubheader>{o.type}</ListSubheader>}>
                                 {o.patterns.map(item => (
-                                    <ListItem onClick={this.handleToggle(item.pattern)} key={item.pattern} button>
+                                    <ListItem onClick={() => this.handleToggle(item)} key={item.pattern} button>
                                         {o.type === 'custom' && (
                                             <Checkbox
                                                 checked={this.state.checked.indexOf(item.pattern) !== -1}
