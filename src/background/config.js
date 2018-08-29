@@ -18,7 +18,6 @@ export const DEFAULT_ACTIONS = [
     `${PATTERN_SURL}`,
     `${PATTERN_TITLE} - ${PATTERN_SURL}`,
     `[${PATTERN_TITLE}](${PATTERN_SURL})`,
-    `<html>[${PATTERN_TITLE}](${PATTERN_URL})</html>`,
     `=HYPERLINK("${PATTERN_URL}","${PATTERN_TITLE}")`,
 ]
 

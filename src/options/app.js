@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux'
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
@@ -8,20 +9,26 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Paper from '@material-ui/core/Paper';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Switch from '@material-ui/core/Switch';
 import ListItemText from '@material-ui/core/ListItemText';
 import Typography from '@material-ui/core/Typography';
-import { bindActionCreators } from 'redux'
-import { ToggleDefaultPattern } from '../background/reducers/patterns'
+import Zoom from '@material-ui/core/Zoom';
+import Button from '@material-ui/core/Button';
+import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
+import Checkbox from '@material-ui/core/Checkbox';
+import { groupBy, chain, toPairs, without } from 'lodash'
+import { ToggleDefaultPattern, RemoveCustomPattern } from '../background/reducers/patterns'
+import Dialog from './dialog'
 
 const styles = theme => ({
     appBar: {
         position: 'relative',
     },
     layout: {
+        // position: 'relative',
         width: 'auto',
         marginLeft: theme.spacing.unit * 2,
         marginRight: theme.spacing.unit * 2,
@@ -41,16 +48,10 @@ const styles = theme => ({
             padding: theme.spacing.unit * 3,
         },
     },
-    stepper: {
-        padding: `${theme.spacing.unit * 3}px 0 ${theme.spacing.unit * 5}px`,
-    },
-    buttons: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-    },
-    button: {
-        marginTop: theme.spacing.unit * 3,
-        marginLeft: theme.spacing.unit,
+    fab: {
+        position: 'fixed',
+        bottom: '1rem',
+        right: '1rem'
     },
 });
 
@@ -58,8 +59,14 @@ const styles = theme => ({
 class Options extends React.Component {
 
     state = {
-        checked: ['wifi'],
+        open: false,
+        checked: [0],
+        value: 0
     };
+
+    updatePattern = (item) => {
+        this.props.ToggleDefaultPattern(item)
+    }
 
     handleToggle = value => () => {
         const { checked } = this.state;
@@ -72,17 +79,65 @@ class Options extends React.Component {
             newChecked.splice(currentIndex, 1);
         }
 
+        const [_, ...text] = newChecked
+        if (text.length > 0) {
+            this.setState({ value: 1 })
+        } else {
+            this.setState({ value: 0 })
+        }
+
         this.setState({
             checked: newChecked,
         });
-    };
+    }
 
-    updatePattern = (item) => {
-        this.props.ToggleDefaultPattern(item)
+    handleFabClick = () => {
+        const { value, checked } = this.state
+
+        switch (value) {
+            case 0:
+                this.setState({ open: true })
+                break;
+            case 1:
+                const [_, ...patterns] = checked
+                const newChecked = [...checked]
+                this.props.RemoveCustomPattern({ patterns })
+                this.setState({ value: 0, checked: without(newChecked, ...patterns) })
+                break;
+
+            default:
+                break;
+        }
     }
 
     render() {
-        const { classes, patterns } = this.props;
+        const { classes, patterns, theme } = this.props;
+        const { open } = this.state;
+
+        const transitionDuration = {
+            enter: theme.transitions.duration.enteringScreen,
+            exit: theme.transitions.duration.leavingScreen,
+        }
+
+        const fabs = [
+            {
+                color: 'primary',
+                className: classes.fab,
+                icon: <AddIcon />,
+            },
+            {
+                color: 'secondary',
+                className: classes.fab,
+                icon: <DeleteIcon />,
+            },
+        ];
+
+        const xx = chain(patterns)
+            .groupBy('type')
+            .toPairs()
+            .map(([type, patterns], key) => ({ type, patterns }))
+            .value()
+
         return (
             <React.Fragment>
                 <CssBaseline />
@@ -98,19 +153,47 @@ class Options extends React.Component {
                         <Typography variant="display1" align="center">
                             Patterns
                         </Typography>
-                        <List component="nav" subheader={<ListSubheader>Default</ListSubheader>}>
-                            {patterns.map(item => (
-                                <ListItem key={item.pattern} button>
-                                    <ListItemText inset primary={item.pattern} />
-                                    <ListItemSecondaryAction>
-                                        <Switch
-                                            onChange={() => this.updatePattern(item)}
-                                            checked={item.isEnable}
-                                        />
-                                    </ListItemSecondaryAction>
-                                </ListItem>
-                            ))}
-                        </List>
+
+                        {xx.map((o) => (
+                            <List key={o.type} component="nav" subheader={<ListSubheader>{o.type}</ListSubheader>}>
+                                {o.patterns.map(item => (
+                                    <ListItem onClick={this.handleToggle(item.pattern)} key={item.pattern} button>
+                                        {o.type === 'custom' && (
+                                            <Checkbox
+                                                checked={this.state.checked.indexOf(item.pattern) !== -1}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                style={{ height: 0 }}
+                                            />
+                                        )}
+                                        <ListItemText inset primary={item.pattern} />
+                                        <ListItemSecondaryAction>
+                                            <Switch
+                                                onChange={() => this.updatePattern(item)}
+                                                checked={item.isEnable}
+                                            />
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        ))}
+                        {fabs.map((fab, index) => (
+                            <Zoom
+                                key={fab.color}
+                                in={this.state.value === index}
+                                timeout={transitionDuration}
+                                style={{
+                                    transitionDelay: `${this.state.value === index ? transitionDuration.exit : 0}ms`,
+                                }}
+                                unmountOnExit
+                            >
+                                <Button variant="fab" className={fab.className} color={fab.color} onClick={() => this.handleFabClick()}>
+                                    {fab.icon}
+                                </Button>
+                            </Zoom>
+                        ))}
+
+                        <Dialog open={open} close={() => this.setState({ open: false })} />
                     </Paper>
                 </main>
             </React.Fragment>
@@ -130,6 +213,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = dispatch => bindActionCreators(
     {
         ToggleDefaultPattern,
+        RemoveCustomPattern
     },
     dispatch
 )
@@ -137,4 +221,4 @@ const mapDispatchToProps = dispatch => bindActionCreators(
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(withStyles(styles)(Options))
+)(withStyles(styles, { withTheme: true })(Options))
