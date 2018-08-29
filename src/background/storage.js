@@ -14,9 +14,9 @@ export const loadState = async (getCurrentState) => {
         currentWindow: true,
         status: 'complete'
     }).then(([tab]) => tab)
-    
+
     const state = await chrome.storage.local.getAsync(['state']).then(result => result.state)
-    
+
     if (state) {
         return state
     } else {
@@ -34,5 +34,5 @@ export const loadState = async (getCurrentState) => {
 }
 
 export const saveState = async (state) => {
-    await chrome.storage.local.setAsync({ state }).then(() => console.log(`set state to storage`))
+    await chrome.storage.local.setAsync({ state })
 }

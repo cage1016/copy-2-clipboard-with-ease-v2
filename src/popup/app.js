@@ -27,7 +27,7 @@ class SimpleMenu extends React.Component {
                 p = p.filter(item => item.pattern.indexOf(PATTERN_SURL) === -1)
 
             p = p.filter(item => item.isEnable)
-            r = p.map(item => (<MenuItem key={item.pattern} onClick={() => this.onClick(item.pattern, tab)}>{item.pattern}</MenuItem>))
+            r = p.map(item => (<MenuItem key={item.pattern} onClick={() => this.onClick(item.pattern, tab)}>{item.pattern.replace(/ /g, "\u00a0")}</MenuItem>))
         }
         return (
             <div className={classes.root} >

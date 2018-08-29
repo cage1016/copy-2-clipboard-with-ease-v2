@@ -166,7 +166,7 @@ class Options extends React.Component {
                                                 style={{ height: 0 }}
                                             />
                                         )}
-                                        <ListItemText inset primary={item.pattern} />
+                                        <ListItemText inset primary={item.pattern.replace(/ /g, "\u00a0")} />
                                         <ListItemSecondaryAction>
                                             <Switch
                                                 onChange={() => this.updatePattern(item)}

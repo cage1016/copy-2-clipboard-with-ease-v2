@@ -13,18 +13,30 @@ import { AddCustomPattern } from '../background/reducers/patterns'
 class FormDialog extends React.Component {
 
     state = {
-        pattern: ''
+        pattern: '',
+        error: false
     }
 
-    add() {
-        const { close, AddCustomPattern } = this.props
-        AddCustomPattern({
-            pattern: this.state.pattern.trim(),
-            isEnable: true,
-            type: 'custom'
-        })
-        this.setState({ pattern: '' })
-        close()
+    add = () => {
+        const newPattern = this.state.pattern.trim()
+        console.log(newPattern)
+        if (newPattern.length === 0) {
+            this.setState({ error: true })
+        } else {
+            const { close, AddCustomPattern } = this.props
+            AddCustomPattern({
+                pattern: newPattern,
+                isEnable: true,
+                type: 'custom'
+            })
+            this.setState({ pattern: '', error: false })
+            close()
+        }
+    }
+
+    close = () => {
+        this.setState({ pattern: '', error: false })
+        this.props.close()
     }
 
     handleChange = name => event => {
@@ -38,7 +50,7 @@ class FormDialog extends React.Component {
             <div>
                 <Dialog
                     open={this.props.open}
-                    onClose={this.props.close}
+                    onClose={this.close}
                     aria-labelledby="form-dialog-title"
                 >
                     <DialogTitle id="form-dialog-title">Add Pattern</DialogTitle>
@@ -47,7 +59,9 @@ class FormDialog extends React.Component {
                             Please use `url`, `surl` & `title` (multiple) keyword to create arbitrarily pattern
                         </DialogContentText>
                         <TextField
+                            error={this.state.error}
                             autoFocus
+                            required
                             margin="dense"
                             id="pattern"
                             label="Copy 2 clipbard with ease pattern"
@@ -60,10 +74,10 @@ class FormDialog extends React.Component {
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={this.props.close} color="primary">
+                        <Button onClick={this.close} color="primary">
                             Cancel
                         </Button>
-                        <Button onClick={() => this.add()} color="primary">
+                        <Button onClick={this.add} color="primary">
                             Add
                         </Button>
                     </DialogActions>

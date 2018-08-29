@@ -34,7 +34,7 @@ const setMenu = async () => {
         patterns
     } } = store.getState()
 
-    console.log('current tab → ', tab)
+    // console.log('current tab → ', tab)
     
     if (!tab.url) {
         await chrome.browserAction.disable(tab.id)

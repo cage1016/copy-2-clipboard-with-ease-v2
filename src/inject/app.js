@@ -45,7 +45,7 @@ class PositionedSnackbar extends React.Component {
                 }}
                 onClose={this.props.CloseSnackbar}
                 autoHideDuration={snackbar.autoHideDuration}
-                message={<span id="message-id">{snackbar.msg}</span>}
+                message={<span id="message-id">{snackbar.msg.replace(/ /g, "\u00a0")}</span>}
             />
         );
     }
