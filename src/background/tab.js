@@ -35,7 +35,7 @@ const setMenu = async () => {
     } } = store.getState()
 
     // console.log('current tab → ', tab)
-    
+
     if (!tab.url) {
         await chrome.browserAction.disable(tab.id)
         return
@@ -72,7 +72,7 @@ const setMenu = async () => {
                     store.dispatch({
                         type: 'user-clicked-alias',
                         payload: {
-                            pattern,
+                            pattern: item.pattern,
                             tab: {
                                 title: info.selectionText,
                                 url: info.linkUrl,
